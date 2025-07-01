@@ -25,12 +25,20 @@
 <div class="glass">
   <h2>Import Assessments from Daymap</h2>
   <ol>
-    <li>Open your Daymap tasks page.</li>
+    <li>Go to <a href="https://gihs.daymap.net/daymap/student/portfolio.aspx?tab=Assessment_Results" target="_blank">your Daymap Assessment Results page</a>.</li>
     <li>Open the browser console (F12 or Ctrl+Shift+I).</li>
     <li>Paste the following code and press Enter:</li>
   </ol>
   <pre>
-addSubject("a")
+function addSubject(name) {
+  // You must add this subject manually in the GPA Calculator UI if not present.
+  // This is a placeholder for compatibility with the code below.
+}
+function addAssessment(subjectIndex, score, outOf, weight) {
+  // You must add this assessment manually in the GPA Calculator UI.
+  // This is a placeholder for compatibility with the code below.
+}
+addSubject("a");
 document.querySelector("#tblTasks").childNodes[0].childNodes.forEach((el,index)=>{
     if (el.innerText && el.innerText.includes("Summative")) {
         var data = el.innerText.split("    ")
