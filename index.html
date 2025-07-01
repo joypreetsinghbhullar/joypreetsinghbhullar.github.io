@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GPA Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background-color: #202A44;
+      color: white;
+      margin: 0;
+      padding: 2rem;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 1rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    }
+    .input-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      align-items: center;
+    }
+    input[type=number], input[type=text] {
+      padding: 0.4rem;
+      border: none;
+      border-radius: 0.5rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 0.4rem 0.75rem;
+      background-color: #FFCD00;
+      color: #202A44;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #e6b800;
+    }
+    .center {
+      text-align: center;
+    }
+    canvas {
+      background: #ffffff0a;
+      border-radius: 1rem;
+      padding: 1rem;
+      max-width: 100%;
+    }
+    .key-table {
+      margin: 1rem auto;
+      border-collapse: collapse;
+      background: rgba(255,255,255,0.08);
+      border-radius: 1rem;
+      overflow: hidden;
+      max-width: 500px;
+    }
+    .key-table th, .key-table td {
+      padding: 0.5rem 1rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      text-align: center;
+    }
+    .highlight {
+      background-color: #FFCD00;
+      color: #202A44;
+      font-weight: bold;
+    }
+    .tiny {
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+    .btn-delete {
+      background-color: #ff4d4d;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      font-weight: normal;
+      font-size: 0.9rem;
+      border-radius: 0.3rem;
+      cursor: pointer;
+      border: none;
+      margin-left: 0.3rem;
+      transition: background 0.2s;
+    }
+    .btn-delete:hover {
+      background-color: #e04343;
+    }
+    .subject-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .assessment-label {
+      width: 50px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h1 class="center">GPA Calculator 🧮</h1>
+<p class="center tiny">Estimation only — GPA rounding follows fixed steps.</p>
+
+<button onclick="addSubject()">+ Add Subject</button>
+<div id="subjectsContainer"></div>
+
+<h2 class="center">Your GPA (Rounded): <span id="overallGPA">0.00</span> / 15</h2>
+<h3 class="center tiny">Raw GPA: <span id="rawGPA">0.00</span></h3>
+<p class="center" id="motivational"></p>
+
+<canvas id="gpaChart" width="400" height="200"></canvas>
+
+<h3 class="center">GPA Decimal Rounding Key</h3>
+<table class="key-table" id="gpaKeyTable">
+  <tr id="keyRow"></tr>
+</table>
+
+<script>
+  const subjects = [];
+  const allowedDecimals = [0.00, 0.14, 0.29, 0.43, 0.57, 0.71, 0.84];
+  let gpaChart = null;
+
+  function roundToGPAConstant(value) {
+    const intPart = Math.floor(value);
+    const decimal = value - intPart;
+    let closest = allowedDecimals[0];
+    let minDiff = Math.abs(decimal - closest);
+    for (let i = 1; i < allowedDecimals.length; i++) {
+      const diff = Math.abs(decimal - allowedDecimals[i]);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = allowedDecimals[i];
+      }
+    }
+    return parseFloat((intPart + closest).toFixed(2));
+  }
+
+  function percentageToGPA(percent) {
+    const scale = [
+      { min: 95, gpa: 15 },
+      { min: 90, gpa: 14 },
+      { min: 85, gpa: 13 },
+      { min: 80, gpa: 12 },
+      { min: 75, gpa: 11 },
+      { min: 70, gpa: 10 },
+      { min: 65, gpa: 9 },
+      { min: 60, gpa: 8 },
+      { min: 55, gpa: 7 },
+      { min: 50, gpa: 6 },
+      { min: 45, gpa: 5 },
+      { min: 40, gpa: 4 },
+      { min: 35, gpa: 3 },
+      { min: 30, gpa: 2 },
+      { min: 25, gpa: 1 },
+      { min: 0, gpa: 0 },
+    ];
+    for (const entry of scale) {
+      if (percent >= entry.min) return entry.gpa;
+    }
+    return 0;
+  }
+
+  function addSubject() {
+    subjects.push({ name: '', assessments: [] });
+    renderSubjects();
+  }
+
+  function removeSubject(index) {
+    subjects.splice(index, 1);
+    renderSubjects();
+  }
+
+  function addAssessment(subjectIndex) {
+    subjects[subjectIndex].assessments.push({ score: 0, outOf: 100, weight: 1 });
+    renderSubjects();
+  }
+
+  function removeAssessment(subjectIndex, assessmentIndex) {
+    subjects[subjectIndex].assessments.splice(assessmentIndex, 1);
+    renderSubjects();
+  }
+
+  function renderSubjects() {
+    const container = document.getElementById('subjectsContainer');
+    container.innerHTML = '';
+
+    subjects.forEach((sub, subIndex) => {
+      const card = document.createElement('div');
+      card.className = 'glass';
+
+      // Subject header with delete
+      const subjectHeader = document.createElement('div');
+      subjectHeader.className = 'subject-header';
+
+      const subjectInput = document.createElement('input');
+      subjectInput.type = 'text';
+      subjectInput.placeholder = 'Subject name';
+      subjectInput.value = sub.name;
+      subjectInput.oninput = e => {
+        sub.name = e.target.value;
+        updateGPA();
+      };
+
+      const deleteSubBtn = document.createElement('button');
+      deleteSubBtn.textContent = 'Delete Subject';
+      deleteSubBtn.className = 'btn-delete';
+      deleteSubBtn.onclick = () => {
+        removeSubject(subIndex);
+      };
+
+      subjectHeader.appendChild(subjectInput);
+      subjectHeader.appendChild(deleteSubBtn);
+
+      card.appendChild(subjectHeader);
+
+      // Assessments container
+      const assessmentsContainer = document.createElement('div');
+      assessmentsContainer.id = `assessments-${subIndex}`;
+
+      // Assessment labels row
+      const labelRow = document.createElement('div');
+      labelRow.className = 'input-group';
+      ['Score', 'Out Of', 'Weight', ''].forEach(label => {
+        const lbl = document.createElement('div');
+        lbl.textContent = label;
+        lbl.style.fontWeight = 'bold';
+        lbl.style.width = label === '' ? 'auto' : '80px';
+        labelRow.appendChild(lbl);
+      });
+      assessmentsContainer.appendChild(labelRow);
+
+      // Render assessments
+      sub.assessments.forEach((a, aIdx) => {
+        const inputGroup = document.createElement('div');
+        inputGroup.className = 'input-group';
+
+        const scoreInput = document.createElement('input');
+        scoreInput.type = 'number';
+        scoreInput.min = '0';
+        scoreInput.placeholder = 'Score';
+        scoreInput.value = a.score;
+        scoreInput.oninput = e => {
+          a.score = parseFloat(e.target.value) || 0;
+          updateGPA();
+        };
+
+        const outOfInput = document.createElement('input');
+        outOfInput.type = 'number';
+        outOfInput.min = '1';
+        outOfInput.placeholder = 'Out Of';
+        outOfInput.value = a.outOf;
+        outOfInput.oninput = e => {
+          const val = e.target.value;
+          // allow empty string to let user clear the field
+          if (val === '') {
+            a.outOf = val; // temporarily empty
+          } else {
+            const num = parseFloat(val);
+            a.outOf = isNaN(num) ? '' : num;
+          }
+          updateGPA();
+        };
+        outOfInput.onblur = e => {
+          if (e.target.value === '' || parseFloat(e.target.value) < 1) {
+            a.outOf = 1;
+            e.target.value = '1';
+            updateGPA();
+          }
+        };
+
+        const weightInput = document.createElement('input');
+        weightInput.type = 'number';
+        weightInput.min = '0';
+        weightInput.step = '0.01';
+        weightInput.placeholder = 'Weight';
+        weightInput.value = a.weight;
+        weightInput.oninput = e => {
+          a.weight = parseFloat(e.target.value) || 1;
+          updateGPA();
+        };
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'X';
+        deleteBtn.className = 'btn-delete';
+        deleteBtn.title = 'Delete Assessment';
+        deleteBtn.onclick = () => {
+          removeAssessment(subIndex, aIdx);
+        };
+
+        inputGroup.appendChild(scoreInput);
+        inputGroup.appendChild(outOfInput);
+        inputGroup.appendChild(weightInput);
+        inputGroup.appendChild(deleteBtn);
+
+        assessmentsContainer.appendChild(inputGroup);
+      });
+
+      // Add Assessment button
+      const addAssessBtn = document.createElement('button');
+      addAssessBtn.textContent = '+ Add Assessment';
+      addAssessBtn.onclick = () => addAssessment(subIndex);
+      addAssessBtn.style.marginTop = '0.5rem';
+
+      card.appendChild(assessmentsContainer);
+      card.appendChild(addAssessBtn);
+
+      container.appendChild(card);
+    });
+
+    updateGPA();
+  }
+
+  function updateGPA() {
+    const subjectGPAs = [];
+    let totalGPA = 0;
+
+    subjects.forEach(sub => {
+      let weightedTotal = 0;
+      let weightSum = 0;
+
+      sub.assessments.forEach(a => {
+        const outOfNum = parseFloat(a.outOf);
+        const percent = outOfNum > 0 ? (a.score / outOfNum) * 100 : 0;
+        const gpa = percentageToGPA(percent);
+        weightedTotal += gpa * a.weight;
+        weightSum += a.weight;
+      });
+
+      const subjectGPA = weightSum ? weightedTotal / weightSum : 0;
+      const roundedSubjectGPA = roundToGPAConstant(subjectGPA);
+      subjectGPAs.push(roundedSubjectGPA);
+      totalGPA += roundedSubjectGPA;
+    });
+
+    const raw = subjects.length ? totalGPA / subjects.length : 0;
+    const rounded = roundToGPAConstant(raw);
+
+    document.getElementById('overallGPA').textContent = rounded.toFixed(2);
+    document.getElementById('rawGPA').textContent = raw.toFixed(2);
+
+    document.getElementById('motivational').textContent = rounded < 13 ? "You're more than a number 💙" : '';
+
+    if (!gpaChart) {
+      gpaChart = new Chart(document.getElementById("gpaChart"), {
+        type: "bar",
+        data: {
+          labels: subjects.map(s => s.name || "Unnamed"),
+          datasets: [{
+            label: "Subject GPA",
+            data: subjectGPAs,
+            backgroundColor: "#FFCD00"
+          }]
+        },
+        options: {
+          animation: false,
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 15
+            }
+          }
+        }
+      });
+    } else {
+      gpaChart.data.labels = subjects.map(s => s.name || "Unnamed");
+      gpaChart.data.datasets[0].data = subjectGPAs;
+      gpaChart.update('none'); // update without animation to avoid page jump
+    }
+
+    drawKeyRow(raw);
+  }
+
+  function drawKeyRow(rawValue) {
+    const decimal = parseFloat((rawValue % 1).toFixed(2));
+    const row = document.getElementById("keyRow");
+    row.innerHTML = '';
+    allowedDecimals.forEach(d => {
+      const td = document.createElement("td");
+      td.textContent = d.toFixed(2);
+      if (Math.abs(d - decimal) < 0.07) {
+        td.className = "highlight";
+      }
+      row.appendChild(td);
+    });
+  }
+
+  // Start with one subject by default
+  addSubject();
+</script>
+
+</body>
+</html>
