@@ -431,5 +431,94 @@
                 ||     ||`)
 </script>
 
+  <h3 class="center">📘 GPA Grade Conversion Chart</h3>
+<table class="key-table">
+  <tr><th>GPA</th><th>Grade</th></tr>
+  <tr><td>15</td><td>A+</td></tr>
+  <tr><td>14</td><td>A</td></tr>
+  <tr><td>13</td><td>A−</td></tr>
+  <tr><td>12</td><td>B+</td></tr>
+  <tr><td>11</td><td>B</td></tr>
+  <tr><td>10</td><td>B−</td></tr>
+  <tr><td>9</td><td>C+</td></tr>
+  <tr><td>8</td><td>C</td></tr>
+  <tr><td>7</td><td>C−</td></tr>
+  <tr><td>6</td><td>D+</td></tr>
+  <tr><td>5</td><td>D</td></tr>
+  <tr><td>4</td><td>D−</td></tr>
+  <tr><td>3</td><td>E+</td></tr>
+  <tr><td>2</td><td>E</td></tr>
+  <tr><td>1</td><td>E−</td></tr>
+  <tr><td>0</td><td>F</td></tr>
+</table>
+
+<!-- Optional Grade Input to Reverse Convert to Marks -->
+<div class="glass center" style="max-width: 400px; margin: 2rem auto;">
+  <h4>🎯 Grade to Marks Converter</h4>
+  <p style="font-size: 0.9rem;">Estimate what mark out of 100 your letter grade usually corresponds to:</p>
+  <select id="gradeSelect" onchange="convertGradeToMark()">
+    <option value="">Select a grade</option>
+    <option value="15">A+</option>
+    <option value="14">A</option>
+    <option value="13">A−</option>
+    <option value="12">B+</option>
+    <option value="11">B</option>
+    <option value="10">B−</option>
+    <option value="9">C+</option>
+    <option value="8">C</option>
+    <option value="7">C−</option>
+    <option value="6">D+</option>
+    <option value="5">D</option>
+    <option value="4">D−</option>
+    <option value="3">E+</option>
+    <option value="2">E</option>
+    <option value="1">E−</option>
+    <option value="0">F</option>
+  </select>
+  <p id="gradeToMarkOutput" style="margin-top: 1rem; font-weight: bold;"></p>
+</div>
+
+<script>
+function convertGradeToMark() {
+  const val = document.getElementById("gradeSelect").value;
+  const output = document.getElementById("gradeToMarkOutput");
+  if (val === "") {
+    output.textContent = "";
+    return;
+  }
+  const gpa = parseInt(val);
+  const mapping = {
+    15: "95–100%",
+    14: "90–94%",
+    13: "85–89%",
+    12: "80–84%",
+    11: "75–79%",
+    10: "70–74%",
+    9:  "65–69%",
+    8:  "60–64%",
+    7:  "55–59%",
+    6:  "50–54%",
+    5:  "45–49%",
+    4:  "40–44%",
+    3:  "35–39%",
+    2:  "30–34%",
+    1:  "25–29%",
+    0:  "Below 25%",
+  };
+  output.textContent = `That roughly means you scored ${mapping[gpa]}`;
+}
+</script>
+
+<!-- Terms/Disclaimer -->
+<div class="glass center tiny" style="max-width: 600px; margin: 3rem auto;">
+  <p><strong>Disclaimer:</strong> This calculator is an estimation tool only. GPA values are rounded using custom decimal logic (0.00, 0.14, 0.29, etc.). It is not affiliated with any official school grading system. No data is saved, transmitted, or collected. Designed in accordance with GDPR and educational privacy principles.</p>
+</div>
+
+
+</body>
+</html>
+
+
+  
 </body>
 </html>
