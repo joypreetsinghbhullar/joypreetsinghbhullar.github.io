@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ...existing code... -->
+  <title>GPA Dashboard & Converter</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Space Grotesk',sans-serif; background: #202A44; color: #fff; padding: 2rem; }
+    .glass { background: rgba(255,255,255,0.1); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; }
+    .center { text-align: center; }
+    canvas { background: #ffffff0a; border-radius: 1rem; padding: 1rem; max-width: 100%; }
+    select, input { border-radius: 0.5rem; border: none; padding: 0.4rem; }
+    button { background: #FFCD00; color: #202A44; border: none; border-radius: 0.5rem; padding: 0.4rem 0.75rem; font-weight: bold; cursor: pointer; margin-top: 0.5rem; }
+    button:hover { background: #e6b800; }
+  </style>
+</head>
+<body>
+<div class="center" style="margin-bottom:1rem;">
+  <a href="index.html"><button>Main GPA Tracker</button></a>
+  <a href="term-gpa.html"><button>Term/Semester Mode</button></a>
+  <a href="daymap.html"><button>Daymap Import</button></a>
+  <a href="legal.html"><button>Legal & Contributors</button></a>
+</div>
+
+<div class="glass">
+  <h2 class="center">📊 GPA Dashboard</h2>
+  <canvas id="gpaDashboardChart" width="400" height="200"></canvas>
+  <div class="center tiny">Sample data shown. Integrate with your GPA data for live updates.</div>
+</div>
+
+<div class="glass center" style="max-width: 400px; margin: 2rem auto;">
+  <h4>🎯 Grade to Marks Converter</h4>
+  <p style="font-size: 0.9rem;">Estimate what mark out of 100 your letter grade usually corresponds to:</p>
+  <select id="gradeSelect" onchange="convertGradeToMark()">
+    <option value="">Select a grade</option>
+    <option value="15">A+</option>
+    <option value="14">A</option>
+    <option value="13">A−</option>
+    <option value="12">B+</option>
+    <option value="11">B</option>
+    <option value="10">B−</option>
+    <option value="9">C+</option>
+    <option value="8">C</option>
+    <option value="7">C−</option>
+    <option value="6">D+</option>
+    <option value="5">D</option>
+    <option value="4">D−</option>
+    <option value="3">E+</option>
+    <option value="2">E</option>
+    <option value="1">E−</option>
+    <option value="0">F</option>
+  </select>
+  <p id="gradeToMarkOutput" style="margin-top: 1rem; font-weight: bold;"></p>
+</div>
+
+<script>
+const ctx = document.getElementById('gpaDashboardChart').getContext('2d');
+const sampleLabels = ['Math', 'English', 'Science', 'History'];
+const sampleData = [13.14, 12.29, 14.00, 11.43];
+const chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: sampleLabels,
+    datasets: [{
+      label: 'Subject GPA',
+      data: sampleData,
+      backgroundColor: "#FFCD00"
+    }]
+  },
+  options: {
+    animation: false,
+    responsive: true,
+    scales: {
+      y: { beginAtZero: true, max: 15 }
+    }
+  }
+});
+
+function convertGradeToMark() {
+  const val = document.getElementById("gradeSelect").value;
+  const output = document.getElementById("gradeToMarkOutput");
+  if (val === "") {
+    output.textContent = "";
+    return;
+  }
+  const gpa = parseInt(val);
+  const mapping = {
+    15: "95–100%",
+    14: "90–94%",
+    13: "85–89%",
+    12: "80–84%",
+    11: "75–79%",
+    10: "70–74%",
+    9:  "65–69%",
+    8:  "60–64%",
+    7:  "55–59%",
+    6:  "50–54%",
+    5:  "45–49%",
+    4:  "40–44%",
+    3:  "35–39%",
+    2:  "30–34%",
+    1:  "25–29%",
+    0:  "Below 25%",
+  };
+  output.textContent = `That roughly means you scored ${mapping[gpa]}`;
+}
+</script>
+</body>
+</html>

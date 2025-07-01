@@ -108,6 +108,14 @@
 </head>
 <body>
 
+<!-- Navigation Buttons -->
+<div class="center" style="margin-bottom:1rem;">
+  <a href="term-gpa.html"><button>Term/Semester Mode</button></a>
+  <a href="dashboard-converter.html"><button>Dashboard & Converter</button></a>
+  <a href="daymap.html"><button>Daymap Import</button></a>
+  <a href="legal.html"><button>Legal & Contributors</button></a>
+</div>
+
 <h1 class="center">GPA Calculator 🧮</h1>
 <p class="center tiny">Estimation only — GPA rounding follows fixed steps.</p>
 
@@ -187,6 +195,14 @@
 
   function removeAssessment(subjectIndex, assessmentIndex) {
     subjects[subjectIndex].assessments.splice(assessmentIndex, 1);
+    renderSubjects();
+  }
+
+  function equallyWeightAssessments(subjectIndex) {
+    const assessments = subjects[subjectIndex].assessments;
+    if (assessments.length === 0) return;
+    const equalWeight = +(1 / assessments.length).toFixed(4);
+    assessments.forEach(a => a.weight = equalWeight);
     renderSubjects();
   }
 
@@ -311,8 +327,20 @@
       addAssessBtn.onclick = () => addAssessment(subIndex);
       addAssessBtn.style.marginTop = '0.5rem';
 
+      // Equally Weight button
+      const equallyBtn = document.createElement('button');
+      equallyBtn.textContent = 'Equally Weight';
+      equallyBtn.onclick = () => equallyWeightAssessments(subIndex);
+      equallyBtn.style.marginLeft = '0.5rem';
+      equallyBtn.title = 'Distribute weights equally among all assessments';
+
+      const btnRow = document.createElement('div');
+      btnRow.style.marginTop = '0.5rem';
+      btnRow.appendChild(addAssessBtn);
+      btnRow.appendChild(equallyBtn);
+
       card.appendChild(assessmentsContainer);
-      card.appendChild(addAssessBtn);
+      card.appendChild(btnRow);
 
       container.appendChild(card);
     });
@@ -323,10 +351,13 @@
   function updateGPA() {
     const subjectGPAs = [];
     let totalGPA = 0;
+    const subjectPercents = [];
 
     subjects.forEach(sub => {
       let weightedTotal = 0;
       let weightSum = 0;
+      let percentTotal = 0;
+      let percentWeightSum = 0;
 
       sub.assessments.forEach(a => {
         const outOfNum = parseFloat(a.outOf);
@@ -334,11 +365,17 @@
         const gpa = percentageToGPA(percent);
         weightedTotal += gpa * a.weight;
         weightSum += a.weight;
+        percentTotal += percent * a.weight;
+        percentWeightSum += a.weight;
       });
 
       const subjectGPA = weightSum ? weightedTotal / weightSum : 0;
       const roundedSubjectGPA = roundToGPAConstant(subjectGPA);
       subjectGPAs.push(roundedSubjectGPA);
+
+      const subjectPercent = percentWeightSum ? percentTotal / percentWeightSum : 0;
+      subjectPercents.push(subjectPercent);
+
       totalGPA += roundedSubjectGPA;
     });
 
@@ -379,6 +416,7 @@
     }
 
     drawKeyRow(raw);
+    drawSubjectTable(subjectPercents, subjectGPAs);
   }
 
   function drawKeyRow(rawValue) {
@@ -393,6 +431,40 @@
       }
       row.appendChild(td);
     });
+  }
+
+  function drawSubjectTable(subjectPercents, subjectGPAs) {
+    let table = document.getElementById('subjectTable');
+    if (!table) {
+      table = document.createElement('table');
+      table.className = 'key-table';
+      table.id = 'subjectTable';
+      table.style.marginTop = '2rem';
+      table.innerHTML = `
+        <tr>
+          <th>Subject</th>
+          <th>Weighted %</th>
+          <th>GPA</th>
+        </tr>
+      `;
+      document.body.appendChild(table);
+    }
+    let rows = '';
+    subjects.forEach((sub, i) => {
+      rows += `<tr>
+        <td>${sub.name || 'Unnamed'}</td>
+        <td>${subjectPercents[i] ? subjectPercents[i].toFixed(2) + '%' : '-'}</td>
+        <td>${subjectGPAs[i] !== undefined ? subjectGPAs[i].toFixed(2) : '-'}</td>
+      </tr>`;
+    });
+    table.innerHTML = `
+      <tr>
+        <th>Subject</th>
+        <th>Weighted %</th>
+        <th>GPA</th>
+      </tr>
+      ${rows}
+    `;
   }
 
   // Start with one subject by default
