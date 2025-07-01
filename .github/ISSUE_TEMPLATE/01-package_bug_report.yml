@@ -1,0 +1,84 @@
+name: Bug Report
+description: Report a technical issue or bug affecting the website or its packages.
+labels: [bug, need repro]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        👋 Thanks for taking the time to report a bug!
+        
+        For code of conduct or copyright concerns, please refer to the [Code of Conduct](<https://github.com/joypreetsinghbhullar/joypreetsinghbhullar.github.io/blob/main/CODE_OF_CONDUCT.md>) and [License](<https://github.com/joypreetsinghbhullar/joypreetsinghbhullar.github.io/blob/main/LICENSE.md) 
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Which part of the website or package is affected?
+      options:
+        - Website (osa-program.dev)
+        - core
+        - simulation
+        - physics-engine
+        - resource-manager
+        - UI-framework
+        - docs
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the issue
+      description: Describe what’s going wrong in as much detail as you can.
+      placeholder: |
+        Steps to reproduce:
+        1. Go to page/package
+        2. Click/scroll/interact with X
+        3. See error or unexpected result
+        4. Include screenshots or logs if helpful
+    validations:
+      required: true
+
+  - type: textarea
+    id: code_sample
+    attributes:
+      label: Relevant code or error messages (if applicable)
+      description: |
+        If the bug involves code, provide a snippet that:
+        - Is minimal and complete
+        - Clearly shows the problem
+      render: typescript
+
+  - type: textarea
+    id: versions
+    attributes:
+      label: Environment details
+      description: Include the versions of software, browser, or OS where the bug was found.
+      placeholder: |
+        - Browser: Chrome 125.0
+        - OS: macOS Ventura 14.5
+        - Node.js 22.12.0
+        - TypeScript 5.1.6
+
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Urgency
+      description: How critical is this issue?
+      options:
+        - Low – cosmetic issue or minor annoyance
+        - Medium – functional bug that needs fixing soon
+        - High – blocking users or critical site functionality
+    validations:
+      required: true
+
+  - type: input
+    id: dev_release
+    attributes:
+      label: Is this confirmed on the latest development release?
+      placeholder: e.g., `d23280c`
+      description: |
+        If you've tested on the latest commit or development branch, drop the hash here. Optional but helpful!
